@@ -43,11 +43,8 @@ export default function History() {
         if (!dateStr) return '';
         const date = new Date(dateStr);
         return date.toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
+            day: 'numeric', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
         });
     };
 
@@ -60,11 +57,11 @@ export default function History() {
     return (
         <div className="min-h-screen bg-gray-50">
             <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-                <h1 className="text-xl font-bold text-blue-600">Interview Prep</h1>
-                <button
-                    onClick={() => navigate('/')}
-                    className="text-sm text-blue-600 hover:underline font-medium"
-                >
+                <div className="flex items-center gap-2">
+                    <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
+                    <span className="font-bold text-gray-800 text-lg">Interview PrepPro</span>
+                </div>
+                <button onClick={() => navigate('/')} className="text-sm text-blue-600 hover:underline font-medium">
                     Back to Dashboard
                 </button>
             </nav>
@@ -77,21 +74,16 @@ export default function History() {
                     <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
                         <div className="text-5xl mb-4">📋</div>
                         <p className="text-gray-500 text-lg">No quizzes taken yet</p>
-                        <button
-                            onClick={() => navigate('/')}
-                            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-xl font-medium hover:bg-blue-700 transition"
-                        >
+                        <button onClick={() => navigate('/')} className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-xl font-medium hover:bg-blue-700 transition">
                             Start your first quiz
                         </button>
                     </div>
                 ) : (
                     <div className="space-y-4">
                         {sessions.map((session, i) => (
-                            <div
-                                key={session.id}
-                                className="bg-white rounded-2xl shadow-sm p-6 flex items-center justify-between hover:shadow-md transition cursor-pointer"
-                                onClick={() => navigate('/results', { state: { sessionId: session.id } })}
-                            >
+                            <div key={session.id}
+                                 className="bg-white rounded-2xl shadow-sm p-6 flex items-center justify-between hover:shadow-md transition cursor-pointer"
+                                 onClick={() => navigate('/results', { state: { sessionId: session.id } })}>
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
                                         <span className="text-blue-600 font-bold text-lg">#{sessions.length - i}</span>
@@ -100,21 +92,17 @@ export default function History() {
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="font-semibold text-gray-800">{session.domain}</span>
                                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getDifficultyColor(session.difficulty)}`}>
-                        {session.difficulty}
-                      </span>
+                                                {session.difficulty}
+                                            </span>
                                             {session.finished && (
-                                                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-medium">
-                          Completed
-                        </span>
+                                                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-medium">Completed</span>
                                             )}
                                         </div>
                                         <p className="text-sm text-gray-400">{formatDate(session.createdAt)}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className={`text-2xl font-bold ${getScoreColor(session.score, 10)}`}>
-                                        {session.score} pts
-                                    </div>
+                                    <div className={`text-2xl font-bold ${getScoreColor(session.score, 10)}`}>{session.score} pts</div>
                                     <div className="text-xs text-gray-400 mt-0.5">Click to review</div>
                                 </div>
                             </div>

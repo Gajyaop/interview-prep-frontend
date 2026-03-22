@@ -4,6 +4,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import api from '../api/axios';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+
 const ROLES = [
     'Software Engineer', 'Frontend Developer', 'Backend Developer',
     'Full Stack Developer', 'Data Scientist', 'DevOps Engineer',
@@ -46,9 +47,7 @@ export default function ResumeAnalyzer() {
             }
         } else {
             const reader = new FileReader();
-            reader.onload = (event) => {
-                setResumeText(event.target.result);
-            };
+            reader.onload = (event) => setResumeText(event.target.result);
             reader.readAsText(file);
         }
     };
@@ -62,10 +61,7 @@ export default function ResumeAnalyzer() {
         setLoading(true);
         setAnalysis(null);
         try {
-            const res = await api.post('/api/ai/resume/analyze', {
-                resumeText,
-                jobRole,
-            });
+            const res = await api.post('/api/ai/resume/analyze', { resumeText, jobRole });
             setAnalysis(res.data.analysis);
         } catch (err) {
             setError('Failed to analyze resume. Try again.');
@@ -92,10 +88,8 @@ export default function ResumeAnalyzer() {
         <div className="min-h-screen bg-gray-50">
             <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">IP</span>
-                    </div>
-                    <span className="font-bold text-gray-800 text-lg">Interview Prep</span>
+                    <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
+                    <span className="font-bold text-gray-800 text-lg">Interview PrepPro</span>
                 </div>
                 <button onClick={() => navigate('/')} className="text-sm text-blue-600 hover:underline font-medium">
                     Back to Dashboard
@@ -109,19 +103,15 @@ export default function ResumeAnalyzer() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Left - Input */}
                     <div className="space-y-5">
                         <div className="bg-white rounded-2xl shadow-sm p-6">
                             <h3 className="font-bold text-gray-800 mb-4">Target Role</h3>
                             <div className="flex flex-wrap gap-2">
                                 {ROLES.map(r => (
-                                    <button
-                                        key={r}
-                                        onClick={() => setJobRole(r)}
-                                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
-                                            jobRole === r ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
-                                    >
+                                    <button key={r} onClick={() => setJobRole(r)}
+                                            className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                                                jobRole === r ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            }`}>
                                         {r}
                                     </button>
                                 ))}
@@ -130,7 +120,6 @@ export default function ResumeAnalyzer() {
 
                         <div className="bg-white rounded-2xl shadow-sm p-6">
                             <h3 className="font-bold text-gray-800 mb-4">Upload Resume</h3>
-
                             <label className="block w-full border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 transition">
                                 <div className="text-4xl mb-2">📄</div>
                                 {extracting ? (
@@ -143,12 +132,7 @@ export default function ResumeAnalyzer() {
                                         <div className="text-xs text-gray-400 mt-1">Supports .pdf and .txt files</div>
                                     </>
                                 )}
-                                <input
-                                    type="file"
-                                    accept=".pdf,.txt"
-                                    onChange={handleFileUpload}
-                                    className="hidden"
-                                />
+                                <input type="file" accept=".pdf,.txt" onChange={handleFileUpload} className="hidden" />
                             </label>
 
                             {resumeText && !extracting && (
@@ -158,31 +142,21 @@ export default function ResumeAnalyzer() {
                             )}
 
                             <div className="mt-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Or paste resume text here
-                                </label>
-                                <textarea
-                                    value={resumeText}
-                                    onChange={e => setResumeText(e.target.value)}
-                                    rows={10}
-                                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                    placeholder="Paste your resume content here..."
-                                />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Or paste resume text here</label>
+                                <textarea value={resumeText} onChange={e => setResumeText(e.target.value)} rows={10}
+                                          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                          placeholder="Paste your resume content here..." />
                             </div>
 
                             {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
-                            <button
-                                onClick={analyzeResume}
-                                disabled={loading || extracting || !resumeText.trim()}
-                                className="w-full mt-4 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-                            >
+                            <button onClick={analyzeResume} disabled={loading || extracting || !resumeText.trim()}
+                                    className="w-full mt-4 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50">
                                 {loading ? 'Analyzing...' : 'Analyze Resume'}
                             </button>
                         </div>
                     </div>
 
-                    {/* Right - Analysis */}
                     <div>
                         {(loading || extracting) && (
                             <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
@@ -198,17 +172,11 @@ export default function ResumeAnalyzer() {
                             <div className="bg-white rounded-2xl shadow-sm p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="font-bold text-gray-800 text-lg">Analysis Results</h3>
-                                    <div className={`text-4xl font-bold ${getScoreColor(analysis)}`}>
-                                        {getScore(analysis)}/10
-                                    </div>
+                                    <div className={`text-4xl font-bold ${getScoreColor(analysis)}`}>{getScore(analysis)}/10</div>
                                 </div>
-                                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
-                                    {analysis}
-                                </pre>
-                                <button
-                                    onClick={() => { setAnalysis(null); setResumeText(''); setFileName(''); }}
-                                    className="w-full mt-6 bg-gray-100 text-gray-700 py-2 rounded-xl font-medium hover:bg-gray-200 transition"
-                                >
+                                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{analysis}</pre>
+                                <button onClick={() => { setAnalysis(null); setResumeText(''); setFileName(''); }}
+                                        className="w-full mt-6 bg-gray-100 text-gray-700 py-2 rounded-xl font-medium hover:bg-gray-200 transition">
                                     Analyze Another Resume
                                 </button>
                             </div>

@@ -45,11 +45,11 @@ export default function Leaderboard() {
     return (
         <div className="min-h-screen bg-gray-50">
             <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-                <h1 className="text-xl font-bold text-blue-600">Interview Prep</h1>
-                <button
-                    onClick={() => navigate('/')}
-                    className="text-sm text-blue-600 hover:underline font-medium"
-                >
+                <div className="flex items-center gap-2">
+                    <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
+                    <span className="font-bold text-gray-800 text-lg">Interview PrepPro</span>
+                </div>
+                <button onClick={() => navigate('/')} className="text-sm text-blue-600 hover:underline font-medium">
                     Back to Dashboard
                 </button>
             </nav>
@@ -62,19 +62,14 @@ export default function Leaderboard() {
                     <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
                         <div className="text-5xl mb-4">🏆</div>
                         <p className="text-gray-500 text-lg">No scores yet</p>
-                        <button
-                            onClick={() => navigate('/')}
-                            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-xl font-medium hover:bg-blue-700 transition"
-                        >
+                        <button onClick={() => navigate('/')} className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-xl font-medium hover:bg-blue-700 transition">
                             Be the first!
                         </button>
                     </div>
                 ) : (
                     <>
-                        {/* Top 3 podium */}
                         {leaders.length >= 3 && (
                             <div className="flex items-end justify-center gap-4 mb-8">
-                                {/* 2nd place */}
                                 <div className="text-center">
                                     <div className="text-4xl mb-2">🥈</div>
                                     <div className="bg-white rounded-2xl shadow-sm p-4 w-28">
@@ -82,7 +77,6 @@ export default function Leaderboard() {
                                         <div className="text-gray-500 text-xs mt-1">{leaders[1]?.totalScore} pts</div>
                                     </div>
                                 </div>
-                                {/* 1st place */}
                                 <div className="text-center">
                                     <div className="text-5xl mb-2">🥇</div>
                                     <div className="bg-yellow-50 border-2 border-yellow-300 rounded-2xl shadow-sm p-4 w-32">
@@ -90,7 +84,6 @@ export default function Leaderboard() {
                                         <div className="text-yellow-600 font-bold mt-1">{leaders[0]?.totalScore} pts</div>
                                     </div>
                                 </div>
-                                {/* 3rd place */}
                                 <div className="text-center">
                                     <div className="text-4xl mb-2">🥉</div>
                                     <div className="bg-white rounded-2xl shadow-sm p-4 w-28">
@@ -101,7 +94,6 @@ export default function Leaderboard() {
                             </div>
                         )}
 
-                        {/* Full list */}
                         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                             <table className="w-full">
                                 <thead className="bg-gray-50 border-b border-gray-100">
@@ -117,29 +109,20 @@ export default function Leaderboard() {
                                 {leaders.map((leader, i) => (
                                     <tr key={i} className={`hover:bg-gray-50 transition ${i < 3 ? 'font-medium' : ''}`}>
                                         <td className="px-6 py-4">
-                        <span className={`text-xl ${getMedalColor(i)}`}>
-                          {getMedalEmoji(i)}
-                        </span>
+                                            <span className={`text-xl ${getMedalColor(i)}`}>{getMedalEmoji(i)}</span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="font-medium text-gray-800">{leader.name}</div>
                                             <div className="text-xs text-gray-400">{leader.email}</div>
                                         </td>
                                         <td className="px-6 py-4">
-                        <span className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">
-                          {leader.bestTopic}
-                        </span>
+                                            <span className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">{leader.bestTopic}</span>
                                         </td>
                                         <td className="px-6 py-4 text-gray-600">{leader.totalSessions}</td>
                                         <td className="px-6 py-4 text-right">
-                        <span className={`text-lg font-bold ${
-                            i === 0 ? 'text-yellow-500' :
-                                i === 1 ? 'text-gray-400' :
-                                    i === 2 ? 'text-amber-600' :
-                                        'text-gray-700'
-                        }`}>
-                          {leader.totalScore}
-                        </span>
+                                                <span className={`text-lg font-bold ${
+                                                    i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-amber-600' : 'text-gray-700'
+                                                }`}>{leader.totalScore}</span>
                                             <span className="text-gray-400 text-sm ml-1">pts</span>
                                         </td>
                                     </tr>

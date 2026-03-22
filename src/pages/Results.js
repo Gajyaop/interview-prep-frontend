@@ -12,6 +12,7 @@ export default function Results() {
     const [loading, setLoading] = useState(true);
     const [showReview, setShowReview] = useState(false);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!sessionId) { navigate('/'); return; }
         loadResults();
@@ -38,7 +39,6 @@ export default function Results() {
         </div>
     );
 
-    // With this:
     const percentage = summary && summary.totalQuestions > 0
         ? Math.round((summary.correct / summary.totalQuestions) * 100)
         : 0;
@@ -46,11 +46,11 @@ export default function Results() {
     return (
         <div className="min-h-screen bg-gray-50">
             <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-                <h1 className="text-xl font-bold text-blue-600">Interview Prep</h1>
-                <button
-                    onClick={() => navigate('/')}
-                    className="text-sm text-blue-600 hover:underline font-medium"
-                >
+                <div className="flex items-center gap-2">
+                    <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
+                    <span className="font-bold text-gray-800 text-lg">Interview PrepPro</span>
+                </div>
+                <button onClick={() => navigate('/')} className="text-sm text-blue-600 hover:underline font-medium">
                     Back to Dashboard
                 </button>
             </nav>
@@ -68,7 +68,6 @@ export default function Results() {
 
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div className="bg-gray-50 rounded-xl p-4">
-
                             <div className="text-2xl font-bold text-gray-800">{summary?.totalQuestions}</div>
                             <div className="text-xs text-gray-500 mt-1">Total</div>
                         </div>
@@ -77,7 +76,8 @@ export default function Results() {
                             <div className="text-xs text-gray-500 mt-1">Correct</div>
                         </div>
                         <div className="bg-red-50 rounded-xl p-4">
-                            <div className="text-2xl font-bold text-red-500">{(summary?.attempted || 0) - (summary?.correct || 0)}</div>                            <div className="text-xs text-gray-500 mt-1">Wrong</div>
+                            <div className="text-2xl font-bold text-red-500">{(summary?.attempted || 0) - (summary?.correct || 0)}</div>
+                            <div className="text-xs text-gray-500 mt-1">Wrong</div>
                         </div>
                     </div>
 
@@ -88,18 +88,15 @@ export default function Results() {
                     </div>
                 </div>
 
-                <button
-                    onClick={() => setShowReview(!showReview)}
-                    className="w-full bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition mb-4"
-                >
+                <button onClick={() => setShowReview(!showReview)}
+                        className="w-full bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition mb-4">
                     {showReview ? 'Hide Review' : 'Review Answers'}
                 </button>
 
                 {showReview && review.map((item, i) => (
                     <div key={i} className="bg-white rounded-2xl shadow-sm p-6 mb-4">
                         <p className="font-medium text-gray-800 mb-4">
-                            <span className="text-gray-400 mr-2">Q{i + 1}.</span>
-                            {item.questionText}
+                            <span className="text-gray-400 mr-2">Q{i + 1}.</span>{item.questionText}
                         </p>
                         <div className="space-y-2 mb-3">
                             {['A', 'B', 'C', 'D'].map(opt => {
@@ -121,10 +118,8 @@ export default function Results() {
                     </div>
                 ))}
 
-                <button
-                    onClick={() => navigate('/')}
-                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition mt-2"
-                >
+                <button onClick={() => navigate('/')}
+                        className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition mt-2">
                     Start New Quiz
                 </button>
             </div>

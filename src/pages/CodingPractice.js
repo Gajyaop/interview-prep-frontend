@@ -17,7 +17,6 @@ export default function CodingPractice() {
     const [language, setLanguage] = useState(LANGUAGES[0]);
     const [code, setCode] = useState(LANGUAGES[0].defaultCode);
     const [stdin, setStdin] = useState('');
-    const [output, setOutput] = useState(null);
     const [loading, setLoading] = useState(true);
     const [topic, setTopic] = useState('Java');
     const [generating, setGenerating] = useState(false);
@@ -53,7 +52,6 @@ export default function CodingPractice() {
     const handleLanguageChange = (lang) => {
         setLanguage(lang);
         setCode(lang.defaultCode);
-        setOutput(null);
         setReview(null);
     };
 
@@ -62,9 +60,7 @@ export default function CodingPractice() {
         setGenerating(true);
         try {
             const res = await api.post('/api/ai/generate/coding', {
-                topic,
-                difficulty: 'EASY',
-                count: 3,
+                topic, difficulty: 'EASY', count: 3,
             });
             setGenerateMsg(`✓ Generated ${res.data.generated} new problems`);
             loadProblems();
@@ -97,11 +93,11 @@ export default function CodingPractice() {
     return (
         <div className="min-h-screen bg-gray-50">
             <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-                <h1 className="text-xl font-bold text-blue-600">Interview Prep</h1>
-                <button
-                    onClick={() => navigate('/')}
-                    className="text-sm text-blue-600 hover:underline font-medium"
-                >
+                <div className="flex items-center gap-2">
+                    <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
+                    <span className="font-bold text-gray-800 text-lg">Interview PrepPro</span>
+                </div>
+                <button onClick={() => navigate('/')} className="text-sm text-blue-600 hover:underline font-medium">
                     Back to Dashboard
                 </button>
             </nav>
@@ -109,43 +105,31 @@ export default function CodingPractice() {
             <div className="flex h-screen pt-16">
                 {/* Left panel */}
                 <div className="w-2/5 bg-white border-r border-gray-200 flex flex-col">
-
-                    {/* Topic selector */}
                     <div className="p-4 border-b border-gray-100">
                         <div className="flex gap-2 flex-wrap">
                             {TOPICS.map(t => (
-                                <button
-                                    key={t}
-                                    onClick={() => { setTopic(t); setGenerateMsg(''); setReview(null); }}
-                                    className={`px-3 py-1 rounded-full text-sm font-medium transition ${
-                                        topic === t ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
-                                >
+                                <button key={t} onClick={() => { setTopic(t); setGenerateMsg(''); setReview(null); }}
+                                        className={`px-3 py-1 rounded-full text-sm font-medium transition ${
+                                            topic === t ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        }`}>
                                     {t}
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    {/* AI Generate button */}
                     <div className="px-4 py-3 border-b border-gray-100">
-                        <button
-                            onClick={generateCodingProblems}
-                            disabled={generating}
-                            className="w-full bg-purple-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition disabled:opacity-50"
-                        >
+                        <button onClick={generateCodingProblems} disabled={generating}
+                                className="w-full bg-purple-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition disabled:opacity-50">
                             {generating ? 'Generating...' : '✦ Generate AI Problems'}
                         </button>
                         {generateMsg && (
                             <p className={`text-xs mt-2 text-center font-medium ${
                                 generateMsg.startsWith('✓') ? 'text-green-600' : 'text-red-500'
-                            }`}>
-                                {generateMsg}
-                            </p>
+                            }`}>{generateMsg}</p>
                         )}
                     </div>
 
-                    {/* Problem list */}
                     <div className="flex overflow-x-auto border-b border-gray-100 p-2 gap-2">
                         {loading ? (
                             <p className="text-gray-400 text-sm px-2">Loading...</p>
@@ -153,22 +137,17 @@ export default function CodingPractice() {
                             <p className="text-gray-400 text-sm px-2">No problems found. Generate some!</p>
                         ) : (
                             problems.map((p, i) => (
-                                <button
-                                    key={p.id}
-                                    onClick={() => { setSelectedProblem(p); setReview(null); setOutput(null); }}
-                                    className={`px-3 py-1 rounded-lg text-sm whitespace-nowrap font-medium transition ${
-                                        selectedProblem?.id === p.id
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
-                                >
+                                <button key={p.id}
+                                        onClick={() => { setSelectedProblem(p); setReview(null); }}
+                                        className={`px-3 py-1 rounded-lg text-sm whitespace-nowrap font-medium transition ${
+                                            selectedProblem?.id === p.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        }`}>
                                     Problem {i + 1}
                                 </button>
                             ))
                         )}
                     </div>
 
-                    {/* Problem description */}
                     <div className="flex-1 overflow-y-auto p-6">
                         {selectedProblem ? (
                             <>
@@ -177,9 +156,7 @@ export default function CodingPractice() {
                                         selectedProblem.difficulty === 'EASY' ? 'bg-green-100 text-green-700' :
                                             selectedProblem.difficulty === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
                                                 'bg-red-100 text-red-700'
-                                    }`}>
-                                        {selectedProblem.difficulty}
-                                    </span>
+                                    }`}>{selectedProblem.difficulty}</span>
                                     <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-medium">
                                         {selectedProblem.topic}
                                     </span>
@@ -200,46 +177,34 @@ export default function CodingPractice() {
 
                 {/* Right panel */}
                 <div className="flex-1 flex flex-col">
-                    {/* Language selector + buttons */}
                     <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
                         <div className="flex gap-2">
                             {LANGUAGES.map(lang => (
-                                <button
-                                    key={lang.id}
-                                    onClick={() => handleLanguageChange(lang)}
-                                    className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
-                                        language.id === lang.id
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
-                                >
+                                <button key={lang.id} onClick={() => handleLanguageChange(lang)}
+                                        className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
+                                            language.id === lang.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        }`}>
                                     {lang.name}
                                 </button>
                             ))}
                         </div>
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={getAIReview}
-                                disabled={reviewing}
-                                className="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50 text-sm"
-                            >
+                            <button onClick={getAIReview} disabled={reviewing}
+                                    className="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50 text-sm">
                                 {reviewing ? 'Reviewing...' : '✦ AI Review'}
                             </button>
                             <div className="relative group">
-                                <button
-                                    disabled={true}
-                                    className="bg-gray-300 text-gray-500 px-6 py-2 rounded-lg font-semibold cursor-not-allowed flex items-center gap-2 text-sm"
-                                >
+                                <button disabled={true}
+                                        className="bg-gray-300 text-gray-500 px-6 py-2 rounded-lg font-semibold cursor-not-allowed flex items-center gap-2 text-sm">
                                     ▶ Run Code
                                 </button>
                                 <div className="absolute right-0 top-10 w-64 bg-gray-800 text-white text-xs rounded-lg p-3 hidden group-hover:block z-10 shadow-lg">
-                                    Code execution is temporarily unavailable due to API limits. Use ✦ AI Review to get feedback on your code logic instead!
+                                    Code execution is temporarily unavailable. Use ✦ AI Review to get feedback instead!
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Monaco Editor */}
                     <div className="flex-1">
                         <Editor
                             height="100%"
@@ -247,73 +212,41 @@ export default function CodingPractice() {
                             value={code}
                             onChange={val => setCode(val || '')}
                             theme="vs-dark"
-                            options={{
-                                fontSize: 14,
-                                minimap: { enabled: false },
-                                scrollBeyondLastLine: false,
-                                padding: { top: 16 },
-                            }}
+                            options={{ fontSize: 14, minimap: { enabled: false }, scrollBeyondLastLine: false, padding: { top: 16 } }}
                         />
                     </div>
 
-                    {/* Output + Notice + Review */}
-                    <div
-                        className="bg-gray-900 text-white flex flex-col"
-                        style={{ height: review || reviewing ? '420px' : '220px', transition: 'height 0.3s' }}
-                    >
+                    <div className="bg-gray-900 text-white flex flex-col"
+                         style={{ height: review || reviewing ? '420px' : '220px', transition: 'height 0.3s' }}>
                         <div className="flex" style={{ height: '220px', minHeight: '220px' }}>
-                            {/* Stdin */}
                             <div className="w-1/3 border-r border-gray-700 flex flex-col">
-                                <div className="px-4 py-2 text-xs text-gray-400 border-b border-gray-700 font-medium">
-                                    INPUT (stdin)
-                                </div>
-                                <textarea
-                                    value={stdin}
-                                    onChange={e => setStdin(e.target.value)}
-                                    className="flex-1 bg-transparent text-sm text-gray-200 p-3 resize-none focus:outline-none font-mono"
-                                    placeholder="Enter input here..."
-                                />
+                                <div className="px-4 py-2 text-xs text-gray-400 border-b border-gray-700 font-medium">INPUT (stdin)</div>
+                                <textarea value={stdin} onChange={e => setStdin(e.target.value)}
+                                          className="flex-1 bg-transparent text-sm text-gray-200 p-3 resize-none focus:outline-none font-mono"
+                                          placeholder="Enter input here..." />
                             </div>
-
-                            {/* Output */}
                             <div className="flex-1 flex flex-col">
-                                <div className="px-4 py-2 text-xs text-gray-400 border-b border-gray-700 font-medium">
-                                    <span>OUTPUT</span>
-                                </div>
+                                <div className="px-4 py-2 text-xs text-gray-400 border-b border-gray-700 font-medium">OUTPUT</div>
                                 <div className="flex-1 p-3 overflow-auto font-mono text-sm">
                                     <div className="space-y-2">
-                                        <p className="text-yellow-400 text-sm">
-                                            ⚠ Code execution is temporarily unavailable.
-                                        </p>
+                                        <p className="text-yellow-400 text-sm">⚠ Code execution is temporarily unavailable.</p>
                                         <p className="text-gray-400 text-xs">
-                                            Write your solution in the editor and click ✦ AI Review to get instant AI feedback on your code logic, correctness, and improvements — no execution needed!
+                                            Write your solution and click ✦ AI Review to get instant AI feedback on your code logic!
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* AI Review Panel */}
                         {(review || reviewing) && (
                             <div className="border-t border-gray-700 flex flex-col flex-1 overflow-hidden">
                                 <div className="px-4 py-2 text-xs text-purple-400 border-b border-gray-700 font-medium flex items-center justify-between">
                                     <span>✦ AI CODE REVIEW</span>
-                                    <button
-                                        onClick={() => setReview(null)}
-                                        className="text-gray-500 hover:text-gray-300 text-xs"
-                                    >
-                                        Close
-                                    </button>
+                                    <button onClick={() => setReview(null)} className="text-gray-500 hover:text-gray-300 text-xs">Close</button>
                                 </div>
                                 <div className="flex-1 p-4 overflow-auto">
-                                    {reviewing && (
-                                        <span className="text-purple-400 text-sm">Analyzing your code...</span>
-                                    )}
-                                    {review && (
-                                        <pre className="text-gray-200 text-sm whitespace-pre-wrap font-sans leading-relaxed">
-                                            {review}
-                                        </pre>
-                                    )}
+                                    {reviewing && <span className="text-purple-400 text-sm">Analyzing your code...</span>}
+                                    {review && <pre className="text-gray-200 text-sm whitespace-pre-wrap font-sans leading-relaxed">{review}</pre>}
                                 </div>
                             </div>
                         )}
