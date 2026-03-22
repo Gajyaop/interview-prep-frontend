@@ -18,7 +18,6 @@ export default function CodingPractice() {
     const [code, setCode] = useState(LANGUAGES[0].defaultCode);
     const [stdin, setStdin] = useState('');
     const [output, setOutput] = useState(null);
-    const [running, setRunning] = useState(false);
     const [loading, setLoading] = useState(true);
     const [topic, setTopic] = useState('Java');
     const [generating, setGenerating] = useState(false);
@@ -58,29 +57,6 @@ export default function CodingPractice() {
         setReview(null);
     };
 
-    const runCode = async () => {
-        setRunning(true);
-        setOutput(null);
-        setReview(null);
-        try {
-            const res = await api.post('/api/code/run', {
-                sourceCode: code,
-                languageId: language.id,
-                stdin: stdin,
-            });
-            setOutput(res.data);
-        } catch (err) {
-            setOutput({
-                stdout: null,
-                stderr: err.response?.data?.message || 'Execution failed',
-                status: 'Error',
-                statusId: 13,
-            });
-        } finally {
-            setRunning(false);
-        }
-    };
-
     const generateCodingProblems = async () => {
         setGenerateMsg('');
         setGenerating(true);
@@ -108,7 +84,7 @@ export default function CodingPractice() {
                 code,
                 language: language.name,
                 problemDescription: selectedProblem.questionText,
-                output: output?.stdout || output?.stderr || 'No output',
+                output: 'No output - code execution unavailable',
             });
             setReview(res.data.feedback);
         } catch (err) {
@@ -116,22 +92,6 @@ export default function CodingPractice() {
         } finally {
             setReviewing(false);
         }
-    };
-
-    const getStatusColor = (statusId) => {
-        if (statusId === 3) return 'text-green-600 bg-green-50';
-        if (statusId === 6) return 'text-red-600 bg-red-50';
-        if (statusId === 5) return 'text-yellow-600 bg-yellow-50';
-        return 'text-red-600 bg-red-50';
-    };
-
-    const getVerdict = () => {
-        if (!output || !selectedProblem) return null;
-        if (output.statusId !== 3) return { correct: false, label: output.status };
-        if (!output.stdout || output.stdout.trim() === '') {
-            return { correct: false, label: 'No Output' };
-        }
-        return { correct: true, label: 'Accepted' };
     };
 
     return (
@@ -257,21 +217,25 @@ export default function CodingPractice() {
                                 </button>
                             ))}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-2">
                             <button
                                 onClick={getAIReview}
-                                disabled={reviewing || !output}
+                                disabled={reviewing}
                                 className="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50 text-sm"
                             >
                                 {reviewing ? 'Reviewing...' : '✦ AI Review'}
                             </button>
-                            <button
-                                onClick={runCode}
-                                disabled={running}
-                                className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 flex items-center gap-2"
-                            >
-                                {running ? 'Running...' : '▶ Run Code'}
-                            </button>
+                            <div className="relative group">
+                                <button
+                                    disabled={true}
+                                    className="bg-gray-300 text-gray-500 px-6 py-2 rounded-lg font-semibold cursor-not-allowed flex items-center gap-2 text-sm"
+                                >
+                                    ▶ Run Code
+                                </button>
+                                <div className="absolute right-0 top-10 w-64 bg-gray-800 text-white text-xs rounded-lg p-3 hidden group-hover:block z-10 shadow-lg">
+                                    Code execution is temporarily unavailable due to API limits. Use ✦ AI Review to get feedback on your code logic instead!
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -292,12 +256,11 @@ export default function CodingPractice() {
                         />
                     </div>
 
-                    {/* Input + Output + Review */}
+                    {/* Output + Notice + Review */}
                     <div
                         className="bg-gray-900 text-white flex flex-col"
                         style={{ height: review || reviewing ? '420px' : '220px', transition: 'height 0.3s' }}
                     >
-                        {/* Input + Output row */}
                         <div className="flex" style={{ height: '220px', minHeight: '220px' }}>
                             {/* Stdin */}
                             <div className="w-1/3 border-r border-gray-700 flex flex-col">
@@ -314,44 +277,18 @@ export default function CodingPractice() {
 
                             {/* Output */}
                             <div className="flex-1 flex flex-col">
-                                <div className="px-4 py-2 text-xs text-gray-400 border-b border-gray-700 font-medium flex items-center justify-between">
+                                <div className="px-4 py-2 text-xs text-gray-400 border-b border-gray-700 font-medium">
                                     <span>OUTPUT</span>
-                                    {output && (() => {
-                                        const verdict = getVerdict();
-                                        return verdict ? (
-                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                                verdict.correct
-                                                    ? 'text-green-600 bg-green-50'
-                                                    : 'text-red-600 bg-red-50'
-                                            }`}>
-                                                {verdict.label}
-                                            </span>
-                                        ) : null;
-                                    })()}
                                 </div>
                                 <div className="flex-1 p-3 overflow-auto font-mono text-sm">
-                                    {running && <span className="text-gray-400">Running...</span>}
-                                    {!running && output && (
-                                        <>
-                                            {output.stdout && (
-                                                <pre className="text-green-400 whitespace-pre-wrap">{output.stdout}</pre>
-                                            )}
-                                            {output.compileOutput && (
-                                                <pre className="text-yellow-400 whitespace-pre-wrap">{output.compileOutput}</pre>
-                                            )}
-                                            {output.stderr && (
-                                                <pre className="text-red-400 whitespace-pre-wrap">{output.stderr}</pre>
-                                            )}
-                                            {!output.stdout && !output.stderr && !output.compileOutput && (
-                                                <span className="text-yellow-400">
-                                                    Program ran but produced no output. Check your code.
-                                                </span>
-                                            )}
-                                        </>
-                                    )}
-                                    {!running && !output && (
-                                        <span className="text-gray-500">Run your code to see output here</span>
-                                    )}
+                                    <div className="space-y-2">
+                                        <p className="text-yellow-400 text-sm">
+                                            ⚠ Code execution is temporarily unavailable.
+                                        </p>
+                                        <p className="text-gray-400 text-xs">
+                                            Write your solution in the editor and click ✦ AI Review to get instant AI feedback on your code logic, correctness, and improvements — no execution needed!
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
