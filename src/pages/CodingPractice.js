@@ -17,6 +17,8 @@ export default function CodingPractice() {
     const [language, setLanguage] = useState(LANGUAGES[0]);
     const [code, setCode] = useState(LANGUAGES[0].defaultCode);
     const [stdin, setStdin] = useState('');
+    const [output, setOutput] = useState(null);
+    const [running, setRunning] = useState(false);
     const [loading, setLoading] = useState(true);
     const [topic, setTopic] = useState('Java');
     const [generating, setGenerating] = useState(false);
@@ -52,7 +54,31 @@ export default function CodingPractice() {
     const handleLanguageChange = (lang) => {
         setLanguage(lang);
         setCode(lang.defaultCode);
+        setOutput(null);
         setReview(null);
+    };
+
+    const runCode = async () => {
+        setRunning(true);
+        setOutput(null);
+        setReview(null);
+        try {
+            const res = await api.post('/api/code/run', {
+                sourceCode: code,
+                languageId: language.id,
+                stdin: stdin,
+            });
+            setOutput(res.data);
+        } catch (err) {
+            setOutput({
+                stdout: null,
+                stderr: err.response?.data?.message || 'Execution failed',
+                status: 'Error',
+                statusId: 13,
+            });
+        } finally {
+            setRunning(false);
+        }
     };
 
     const generateCodingProblems = async () => {
@@ -80,7 +106,7 @@ export default function CodingPractice() {
                 code,
                 language: language.name,
                 problemDescription: selectedProblem.questionText,
-                output: 'No output - code execution unavailable',
+                output: output?.stdout || output?.stderr || 'No output',
             });
             setReview(res.data.feedback);
         } catch (err) {
@@ -88,6 +114,15 @@ export default function CodingPractice() {
         } finally {
             setReviewing(false);
         }
+    };
+
+    const getVerdict = () => {
+        if (!output || !selectedProblem) return null;
+        if (output.statusId !== 3) return { correct: false, label: output.status };
+        if (!output.stdout || output.stdout.trim() === '') {
+            return { correct: false, label: 'No Output' };
+        }
+        return { correct: true, label: 'Accepted' };
     };
 
     return (
@@ -108,7 +143,7 @@ export default function CodingPractice() {
                     <div className="p-4 border-b border-gray-100">
                         <div className="flex gap-2 flex-wrap">
                             {TOPICS.map(t => (
-                                <button key={t} onClick={() => { setTopic(t); setGenerateMsg(''); setReview(null); }}
+                                <button key={t} onClick={() => { setTopic(t); setGenerateMsg(''); setReview(null); setOutput(null); }}
                                         className={`px-3 py-1 rounded-full text-sm font-medium transition ${
                                             topic === t ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}>
@@ -138,7 +173,7 @@ export default function CodingPractice() {
                         ) : (
                             problems.map((p, i) => (
                                 <button key={p.id}
-                                        onClick={() => { setSelectedProblem(p); setReview(null); }}
+                                        onClick={() => { setSelectedProblem(p); setReview(null); setOutput(null); }}
                                         className={`px-3 py-1 rounded-lg text-sm whitespace-nowrap font-medium transition ${
                                             selectedProblem?.id === p.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}>
@@ -189,19 +224,14 @@ export default function CodingPractice() {
                             ))}
                         </div>
                         <div className="flex items-center gap-2">
-                            <button onClick={getAIReview} disabled={reviewing}
+                            <button onClick={getAIReview} disabled={reviewing || !output}
                                     className="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50 text-sm">
                                 {reviewing ? 'Reviewing...' : '✦ AI Review'}
                             </button>
-                            <div className="relative group">
-                                <button disabled={true}
-                                        className="bg-gray-300 text-gray-500 px-6 py-2 rounded-lg font-semibold cursor-not-allowed flex items-center gap-2 text-sm">
-                                    ▶ Run Code
-                                </button>
-                                <div className="absolute right-0 top-10 w-64 bg-gray-800 text-white text-xs rounded-lg p-3 hidden group-hover:block z-10 shadow-lg">
-                                    Code execution is temporarily unavailable. Use ✦ AI Review to get feedback instead!
-                                </div>
-                            </div>
+                            <button onClick={runCode} disabled={running}
+                                    className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 flex items-center gap-2 text-sm">
+                                {running ? 'Running...' : '▶ Run Code'}
+                            </button>
                         </div>
                     </div>
 
@@ -226,14 +256,32 @@ export default function CodingPractice() {
                                           placeholder="Enter input here..." />
                             </div>
                             <div className="flex-1 flex flex-col">
-                                <div className="px-4 py-2 text-xs text-gray-400 border-b border-gray-700 font-medium">OUTPUT</div>
+                                <div className="px-4 py-2 text-xs text-gray-400 border-b border-gray-700 font-medium flex items-center justify-between">
+                                    <span>OUTPUT</span>
+                                    {output && (() => {
+                                        const verdict = getVerdict();
+                                        return verdict ? (
+                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                                verdict.correct ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'
+                                            }`}>{verdict.label}</span>
+                                        ) : null;
+                                    })()}
+                                </div>
                                 <div className="flex-1 p-3 overflow-auto font-mono text-sm">
-                                    <div className="space-y-2">
-                                        <p className="text-yellow-400 text-sm">⚠ Code execution is temporarily unavailable.</p>
-                                        <p className="text-gray-400 text-xs">
-                                            Write your solution and click ✦ AI Review to get instant AI feedback on your code logic!
-                                        </p>
-                                    </div>
+                                    {running && <span className="text-gray-400">Running...</span>}
+                                    {!running && output && (
+                                        <>
+                                            {output.stdout && <pre className="text-green-400 whitespace-pre-wrap">{output.stdout}</pre>}
+                                            {output.compileOutput && <pre className="text-yellow-400 whitespace-pre-wrap">{output.compileOutput}</pre>}
+                                            {output.stderr && <pre className="text-red-400 whitespace-pre-wrap">{output.stderr}</pre>}
+                                            {!output.stdout && !output.stderr && !output.compileOutput && (
+                                                <span className="text-yellow-400">Program ran but produced no output.</span>
+                                            )}
+                                        </>
+                                    )}
+                                    {!running && !output && (
+                                        <span className="text-gray-500">Run your code to see output here</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
