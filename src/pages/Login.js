@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 import api from '../api/axios';
 
 export default function Login() {
@@ -26,6 +27,27 @@ export default function Login() {
             navigate('/');
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Check your credentials.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setError('');
+        setLoading(true);
+        try {
+            const res = await api.post('/api/auth/google', {
+                idToken: credentialResponse.credential,
+            });
+            const userData = {
+                id: res.data.userId,
+                name: res.data.name,
+                email: res.data.email,
+            };
+            login(userData, res.data.token);
+            navigate('/');
+        } catch (err) {
+            setError('Google login failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -107,6 +129,25 @@ export default function Login() {
                                 {loading ? 'Signing in...' : 'Sign in'}
                             </button>
                         </form>
+
+                        {/* Divider */}
+                        <div className="flex items-center gap-3 my-5">
+                            <div className="flex-1 h-px bg-gray-200" />
+                            <span className="text-xs text-gray-400 font-medium">OR</span>
+                            <div className="flex-1 h-px bg-gray-200" />
+                        </div>
+
+                        {/* Google Login Button */}
+                        <div className="flex justify-center">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => setError('Google login failed. Please try again.')}
+                                width="100%"
+                                text="signin_with"
+                                shape="rectangular"
+                                theme="outline"
+                            />
+                        </div>
 
                         <p className="text-center text-sm text-gray-500 mt-6">
                             Don't have an account?{' '}

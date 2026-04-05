@@ -17,6 +17,8 @@ export default function CodingPractice() {
     const [language, setLanguage] = useState(LANGUAGES[0]);
     const [code, setCode] = useState(LANGUAGES[0].defaultCode);
     const [stdin, setStdin] = useState('');
+    const [output, setOutput] = useState(null);       // NEW
+    const [running, setRunning] = useState(false);    // NEW
     const [loading, setLoading] = useState(true);
     const [topic, setTopic] = useState('Java');
     const [generating, setGenerating] = useState(false);
@@ -53,6 +55,7 @@ export default function CodingPractice() {
         setLanguage(lang);
         setCode(lang.defaultCode);
         setReview(null);
+        setOutput(null);   // NEW
     };
 
     const generateCodingProblems = async () => {
@@ -71,6 +74,26 @@ export default function CodingPractice() {
         }
     };
 
+    // NEW - Run Code function
+    const runCode = async () => {
+        if (!code) return;
+        setRunning(true);
+        setOutput(null);
+        setReview(null);
+        try {
+            const res = await api.post('/api/code/run', {
+                sourceCode: code,
+                languageId: language.id,
+                stdin: stdin,
+            });
+            setOutput(res.data);
+        } catch (err) {
+            setOutput({ stderr: 'Failed to run code. Please try again.', statusId: 13 });
+        } finally {
+            setRunning(false);
+        }
+    };
+
     const getAIReview = async () => {
         if (!code || !selectedProblem) return;
         setReviewing(true);
@@ -80,7 +103,7 @@ export default function CodingPractice() {
                 code,
                 language: language.name,
                 problemDescription: selectedProblem.questionText,
-                output: 'No output - code execution unavailable',
+                output: output?.stdout || 'No output yet',
             });
             setReview(res.data.feedback);
         } catch (err) {
@@ -88,6 +111,48 @@ export default function CodingPractice() {
         } finally {
             setReviewing(false);
         }
+    };
+
+    // NEW - helper to render output panel content
+    const renderOutput = () => {
+        if (running) {
+            return <p className="text-blue-400 text-sm animate-pulse">⏳ Running your code...</p>;
+        }
+        if (!output) {
+            return (
+                <div className="space-y-2">
+                    <p className="text-gray-400 text-sm">Click ▶ Run Code to execute your solution.</p>
+                    <p className="text-gray-500 text-xs">Or use ✦ AI Review for instant feedback.</p>
+                </div>
+            );
+        }
+        if (output.stdout) {
+            return (
+                <div>
+                    <p className="text-green-400 text-xs mb-1 font-medium">
+                        ✓ {output.status} — {output.time ? `${output.time}s` : ''}
+                    </p>
+                    <pre className="text-gray-200 text-sm font-mono whitespace-pre-wrap">{output.stdout}</pre>
+                </div>
+            );
+        }
+        if (output.compileOutput) {
+            return (
+                <div>
+                    <p className="text-red-400 text-xs mb-1 font-medium">✗ Compilation Error</p>
+                    <pre className="text-red-300 text-sm font-mono whitespace-pre-wrap">{output.compileOutput}</pre>
+                </div>
+            );
+        }
+        if (output.stderr) {
+            return (
+                <div>
+                    <p className="text-red-400 text-xs mb-1 font-medium">✗ Runtime Error</p>
+                    <pre className="text-red-300 text-sm font-mono whitespace-pre-wrap">{output.stderr}</pre>
+                </div>
+            );
+        }
+        return <p className="text-gray-400 text-sm">No output.</p>;
     };
 
     return (
@@ -108,7 +173,7 @@ export default function CodingPractice() {
                     <div className="p-4 border-b border-gray-100">
                         <div className="flex gap-2 flex-wrap">
                             {TOPICS.map(t => (
-                                <button key={t} onClick={() => { setTopic(t); setGenerateMsg(''); setReview(null); }}
+                                <button key={t} onClick={() => { setTopic(t); setGenerateMsg(''); setReview(null); setOutput(null); }}
                                         className={`px-3 py-1 rounded-full text-sm font-medium transition ${
                                             topic === t ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}>
@@ -138,7 +203,7 @@ export default function CodingPractice() {
                         ) : (
                             problems.map((p, i) => (
                                 <button key={p.id}
-                                        onClick={() => { setSelectedProblem(p); setReview(null); }}
+                                        onClick={() => { setSelectedProblem(p); setReview(null); setOutput(null); }}
                                         className={`px-3 py-1 rounded-lg text-sm whitespace-nowrap font-medium transition ${
                                             selectedProblem?.id === p.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}>
@@ -193,15 +258,13 @@ export default function CodingPractice() {
                                     className="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50 text-sm">
                                 {reviewing ? 'Reviewing...' : '✦ AI Review'}
                             </button>
-                            <div className="relative group">
-                                <button disabled={true}
-                                        className="bg-gray-300 text-gray-500 px-6 py-2 rounded-lg font-semibold cursor-not-allowed flex items-center gap-2 text-sm">
-                                    ▶ Run Code
-                                </button>
-                                <div className="absolute right-0 top-10 w-64 bg-gray-800 text-white text-xs rounded-lg p-3 hidden group-hover:block z-10 shadow-lg">
-                                    Code execution is temporarily unavailable. Use ✦ AI Review to get feedback instead!
-                                </div>
-                            </div>
+                            {/* Run Code button — NOW ENABLED */}
+                            <button
+                                onClick={runCode}
+                                disabled={running}
+                                className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 flex items-center gap-2 text-sm">
+                                {running ? '⏳ Running...' : '▶ Run Code'}
+                            </button>
                         </div>
                     </div>
 
@@ -226,14 +289,15 @@ export default function CodingPractice() {
                                           placeholder="Enter input here..." />
                             </div>
                             <div className="flex-1 flex flex-col">
-                                <div className="px-4 py-2 text-xs text-gray-400 border-b border-gray-700 font-medium">OUTPUT</div>
+                                <div className="px-4 py-2 text-xs text-gray-400 border-b border-gray-700 font-medium flex items-center justify-between">
+                                    <span>OUTPUT</span>
+                                    {output && (
+                                        <button onClick={() => setOutput(null)}
+                                                className="text-gray-500 hover:text-gray-300 text-xs">Clear</button>
+                                    )}
+                                </div>
                                 <div className="flex-1 p-3 overflow-auto font-mono text-sm">
-                                    <div className="space-y-2">
-                                        <p className="text-yellow-400 text-sm">⚠ Code execution is temporarily unavailable.</p>
-                                        <p className="text-gray-400 text-xs">
-                                            Write your solution and click ✦ AI Review to get instant AI feedback on your code logic!
-                                        </p>
-                                    </div>
+                                    {renderOutput()}
                                 </div>
                             </div>
                         </div>
