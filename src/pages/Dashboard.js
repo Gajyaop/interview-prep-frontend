@@ -25,18 +25,28 @@ export default function Dashboard() {
     const [generateMsg, setGenerateMsg] = useState('');
     const [sessions, setSessions] = useState([]);
     const [showQuizConfig, setShowQuizConfig] = useState(false);
+    const [pageLoading, setPageLoading] = useState(true);
     const quizConfigRef = useRef(null);
 
     useEffect(() => {
+        // Redirect to login if not authenticated
+        if (!user) {
+            navigate('/login');
+            return;
+        }
         loadRecentStats();
-    }, []);
+    }, [user, navigate]);
 
     const loadRecentStats = async () => {
+        setPageLoading(true);
         try {
             const res = await api.get('/api/interview/history');
-            setSessions(res.data);
+            setSessions(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
-            console.error(err);
+            console.error('Failed to load stats:', err);
+            setSessions([]);
+        } finally {
+            setPageLoading(false);
         }
     };
 
@@ -89,6 +99,33 @@ export default function Dashboard() {
         }, 100);
     };
 
+    // Get user initials safely
+    const getUserInitial = () => {
+        if (user?.name && user.name.trim().length > 0) {
+            return user.name.charAt(0).toUpperCase();
+        }
+        if (user?.email) {
+            return user.email.charAt(0).toUpperCase();
+        }
+        return '?';
+    };
+
+    const getUserName = () => {
+        return user?.name || user?.email?.split('@')[0] || 'User';
+    };
+
+    // Show loading spinner while checking auth
+    if (pageLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-4xl mb-4">⏳</div>
+                    <p className="text-gray-500 text-sm">Loading your dashboard...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Navbar */}
@@ -99,14 +136,30 @@ export default function Dashboard() {
                         <span className="font-bold text-gray-800 text-lg">Interview PrepPro</span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button onClick={() => navigate('/history')} className="text-sm text-gray-600 hover:text-blue-600 font-medium transition">History</button>
-                        <button onClick={() => navigate('/leaderboard')} className="text-sm text-gray-600 hover:text-blue-600 font-medium transition">Leaderboard</button>
-                        <button onClick={() => navigate('/profile')} className="text-sm text-gray-600 hover:text-blue-600 font-medium transition">Profile</button>
-                        <button onClick={() => navigate('/feedback')} className="text-sm text-gray-600 hover:text-pink-600 font-medium transition">Feedback</button>
-                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer" onClick={() => navigate('/profile')}>
-                            <span className="text-white font-bold text-sm">{user?.name?.charAt(0).toUpperCase()}</span>
+                        <button onClick={() => navigate('/history')}
+                                className="text-sm text-gray-600 hover:text-blue-600 font-medium transition">
+                            History
+                        </button>
+                        <button onClick={() => navigate('/leaderboard')}
+                                className="text-sm text-gray-600 hover:text-blue-600 font-medium transition">
+                            Leaderboard
+                        </button>
+                        <button onClick={() => navigate('/profile')}
+                                className="text-sm text-gray-600 hover:text-blue-600 font-medium transition">
+                            Profile
+                        </button>
+                        <button onClick={() => navigate('/feedback')}
+                                className="text-sm text-gray-600 hover:text-pink-600 font-medium transition">
+                            Feedback
+                        </button>
+                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer"
+                             onClick={() => navigate('/profile')}>
+                            <span className="text-white font-bold text-sm">{getUserInitial()}</span>
                         </div>
-                        <button onClick={handleLogout} className="text-sm text-red-500 hover:text-red-700 font-medium transition">Logout</button>
+                        <button onClick={handleLogout}
+                                className="text-sm text-red-500 hover:text-red-700 font-medium transition">
+                            Logout
+                        </button>
                     </div>
                 </div>
             </nav>
@@ -115,7 +168,7 @@ export default function Dashboard() {
                 {/* Welcome section */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-800">
-                        Welcome back, {user?.name}! 👋
+                        Welcome back, {getUserName()}! 👋
                     </h1>
                     <p className="text-gray-500 mt-1">What would you like to practice today?</p>
                 </div>
@@ -258,7 +311,8 @@ export default function Dashboard() {
                     <div ref={quizConfigRef} className="bg-white rounded-2xl shadow-sm border border-blue-100 p-6 mb-8">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="font-bold text-gray-800 text-lg">Configure your MCQ Quiz</h3>
-                            <button onClick={() => setShowQuizConfig(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                            <button onClick={() => setShowQuizConfig(false)}
+                                    className="text-gray-400 hover:text-gray-600">✕</button>
                         </div>
 
                         {error && (
@@ -270,13 +324,10 @@ export default function Dashboard() {
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Topic</label>
                                 <div className="flex flex-wrap gap-2">
                                     {TOPICS.map(t => (
-                                        <button
-                                            key={t}
-                                            onClick={() => setTopic(t)}
-                                            className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
-                                                topic === t ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                            }`}
-                                        >
+                                        <button key={t} onClick={() => setTopic(t)}
+                                                className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                                                    topic === t ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}>
                                             {t}
                                         </button>
                                     ))}
@@ -287,17 +338,14 @@ export default function Dashboard() {
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
                                 <div className="flex gap-2">
                                     {DIFFICULTIES.map(d => (
-                                        <button
-                                            key={d}
-                                            onClick={() => setDifficulty(d)}
-                                            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                                                difficulty === d
-                                                    ? d === 'EASY' ? 'bg-green-500 text-white'
-                                                        : d === 'MEDIUM' ? 'bg-yellow-500 text-white'
-                                                            : 'bg-red-500 text-white'
-                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                            }`}
-                                        >
+                                        <button key={d} onClick={() => setDifficulty(d)}
+                                                className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                                                    difficulty === d
+                                                        ? d === 'EASY' ? 'bg-green-500 text-white'
+                                                            : d === 'MEDIUM' ? 'bg-yellow-500 text-white'
+                                                                : 'bg-red-500 text-white'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}>
                                             {d}
                                         </button>
                                     ))}
@@ -308,29 +356,21 @@ export default function Dashboard() {
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Number of Questions: {questionCount}
                                 </label>
-                                <input
-                                    type="range" min="3" max="10" value={questionCount}
-                                    onChange={e => setQuestionCount(Number(e.target.value))}
-                                    className="w-full accent-blue-600"
-                                />
+                                <input type="range" min="3" max="10" value={questionCount}
+                                       onChange={e => setQuestionCount(Number(e.target.value))}
+                                       className="w-full accent-blue-600" />
                                 <div className="flex justify-between text-xs text-gray-400 mt-1">
                                     <span>3</span><span>10</span>
                                 </div>
                             </div>
 
                             <div className="flex gap-3">
-                                <button
-                                    onClick={startQuiz}
-                                    disabled={loading}
-                                    className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-                                >
+                                <button onClick={startQuiz} disabled={loading}
+                                        className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50">
                                     {loading ? 'Starting...' : '▶ Start Quiz'}
                                 </button>
-                                <button
-                                    onClick={generateQuestions}
-                                    disabled={generating}
-                                    className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition disabled:opacity-50"
-                                >
+                                <button onClick={generateQuestions} disabled={generating}
+                                        className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition disabled:opacity-50">
                                     {generating ? 'Generating...' : '✦ Generate AI Questions'}
                                 </button>
                             </div>
@@ -351,7 +391,8 @@ export default function Dashboard() {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold text-gray-700">Recent Activity</h3>
-                            <button onClick={() => navigate('/history')} className="text-sm text-blue-600 hover:underline">View all</button>
+                            <button onClick={() => navigate('/history')}
+                                    className="text-sm text-blue-600 hover:underline">View all</button>
                         </div>
                         <div className="space-y-3">
                             {sessions.slice(0, 3).map((s, i) => (
