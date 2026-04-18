@@ -14,6 +14,8 @@ import Profile from './pages/Profile';
 import Feedback from './pages/Feedback';
 import ChatBot from './components/ChatBot';
 import ResumeAnalyzer from './pages/ResumeAnalyzer';
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -56,6 +58,8 @@ function App() {
             <Route path="/resume" element={
               <PrivateRoute><ResumeAnalyzer /></PrivateRoute>
             } />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
           <ChatBot />
         </BrowserRouter>

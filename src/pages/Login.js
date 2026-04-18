@@ -107,6 +107,13 @@ export default function Login() {
                             <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>
                         )}
 
+                        {/* ✅ Show success message if redirected after reset */}
+                        {new URLSearchParams(window.location.search).get('reset') === 'success' && (
+                            <div className="bg-green-50 text-green-600 px-4 py-3 rounded-lg mb-4 text-sm">
+                                Password reset successfully! Please sign in.
+                            </div>
+                        )}
+
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -117,7 +124,16 @@ export default function Login() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                {/* ✅ Password label row with Forgot password link */}
+                                <div className="flex justify-between items-center mb-1">
+                                    <label className="block text-sm font-medium text-gray-700">Password</label>
+                                    <Link
+                                        to="/forgot-password"
+                                        className="text-xs text-blue-600 hover:underline font-medium"
+                                    >
+                                        Forgot password?
+                                    </Link>
+                                </div>
                                 <input
                                     type="password" value={password} onChange={e => setPassword(e.target.value)} required
                                     className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
