@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080',
+    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080',
 });
 
 api.interceptors.request.use((config) => {
@@ -10,6 +10,6 @@ api.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-});x
+});
 
 export default api;
